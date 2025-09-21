@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tugas 2 JavaScript</title>
+</head>
+<body>
+    <header>
+        <h2>Alika Raisya - Universitas Muhammadiyah Jakarta</h2>
+    </header>
+    <main>
+        <table>
+            <thead>
+                <tr>
+                    <th>Pegawai</th>
+                    <th>Umur</th>
+                    <th>Jabatan</th>
+                    <th>Status</th>
+                    <th>Gaji Pokok</th>
+                    <th>Tunjangan Jabatan</th>
+                    <th>BPJS</th>
+                    <th>Tunjangan Keluarga</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <script>
+                        //deklarasi variabel data awal
+                        let nama = "Dodi Prayodi";
+                        let umur = 25;
+                        let jabatan = "manajer";
+                        let statusPernikahan = "menikah";
+
+                        //deklarasi variabel untuk data nilai berdasarkan kondisi
+                        let gajiPokok;
+                        let tunjanganJabatan;
+                        let bpjs;
+                        let tunjanganKeluarga;
+                        let totalGaji;
+
+                        //menentukan gaji pokok
+                        if (jabatan == "manajer") {
+                            gajiPokok = 15000000;
+                        }
+                        else if (jabatan == "asmen") {
+                            gajiPokok = 10000000;
+                        }
+                        else if (jabatan == "staff") {
+                            gajiPokok = 5000000;
+                        }
+
+                        //menentukan tunjuangan jabatan
+                        tunjanganJabatan = gajiPokok*0.15;
+
+                        //menentukan bpjs
+                        bpjs = gajiPokok*0.1;
+
+                        //menentukan tunjangan keluarga
+                        tunjanganKeluarga = (statusPernikahan == "menikah") ? gajiPokok*0.2 : gajiPokok*0;
+
+                        //menentukan total gaji
+                        totalGaji = gajiPokok + tunjanganJabatan + tunjanganKeluarga + bpjs;
+
+                        //menampilkan ke halaman html
+                        document.write(
+                            "<td>" + nama +"</td>" +
+                            "<td>" + umur +"</td>" +
+                            "<td>" + jabatan +"</td>" +
+                            "<td>" + statusPernikahan +"</td>" +
+                            "<td>Rp " + gajiPokok +"</td>" +
+                            "<td>Rp " + tunjanganJabatan +"</td>" +
+                            "<td>Rp " + bpjs +"</td>" +
+                            "<td>Rp " + tunjanganKeluarga +"</td>"
+                        );
+                    </script>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="7">
+                        Total Gaji
+                    </td>
+                    <script>
+                        document.write("<td>Rp " + totalGaji +"</td>")
+                    </script>
+                </tr>
+            </tfoot>
+        </table>
+    </main>
+</body>
+</html>
