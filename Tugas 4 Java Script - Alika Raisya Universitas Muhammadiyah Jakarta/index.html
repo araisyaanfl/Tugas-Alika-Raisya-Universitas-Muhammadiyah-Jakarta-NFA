@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tugas 4 Java Script</title>
+    <style>
+        body { font-family: Inter, system-ui, Arial; padding: 24px; max-width: 900px; margin: auto;}
+        form { display: grid; gap: 8px; align-items: center; margin-bottom: 16px;}
+        label { font-weight: 600;}
+        input { padding: 8px; font-size: 14px;}
+        button { padding: 8px 12px; border-radius: 8px; padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;}
+        .meta{ font-size: 12px; color: #444;}
+        .controls button { margin-left: 8px;}
+        .muted { color: #666; font-size: 13px;}
+    </style>
+</head>
+<body>
+    <h1>Tugas Pertemuan 4 - Sistem Manajemen Transportasi <br> Alika Raisya Universitas Muhammadiyah Jakarta</h1>
+    <form id="rental-form">
+        <div>
+            <label for="nama">Nama</label><br>
+            <input id="nama" name="nama" type="text" required />
+        </div>
+        <div>
+            <label for="tel">Nomor Telepon</label><br>
+            <input id="tel" name="tel" type="text" required />
+        </div>
+        <div>
+            <label for="kendaraan">Kendaraan yang disewa</label><br>
+            <input id="kendaraan" name="kendaraan" type="text" required />
+        </div>
+        <div>
+            <button type="submit">Catat Penyewaan</button>
+        </div>
+    </form>
+    
+    <section>
+        <h2>Daftar Pelanggan yang Sedang Menyewa</h2>
+        <p id="empty-msg" class="muted">Daftar akan muncul di bawah setelah ada transaksi</p>
+        <ul id="rental-list"></ul>
+    </section>
+
+    <script>
+        class Pelanggan {
+            constructor(nama, nomorTelepon, kendaraanDisewa, waktuSewa = new Date()){
+                this.nama = nama;
+                this.nomorTelepon = nomorTelepon;
+                this.kendaraanDisewa = kendaraanDisewa;
+                this.waktuSewa = waktuSewa;
+            }
+
+            catatTransaksi(){
+                return{
+                    nama: this.nama,
+                    nomorTelepon: this.nomorTelepon,
+                    kendaraanDisewa: this.kendaraanDisewa,
+                    waktuSewa: this.waktuSewa.toISOString()
+                };
+            }
+        }
+        
+        class RentalSystem {
+            constructor(storageKey = 'rental_db_v1') {
+                this.storageKey = storageKey;
+                this.pelanggan = this.loadDataPelanggan();
+            }
+
+            loadDataPelanggan(){
+                try {
+                    const raw = localStorage.getItem(this.storageKey);
+                    if (!raw) return[];
+                    const parsed = JSON.parse(raw);
+                    return parsed.map(obj => new Pelanggan(obj.nama, obj.nomorTelepon, obj.kendaraanDisewa, new Date(obj.waktuSewa)));
+                } catch (e) {
+                    console.error('Gagal Memuat Data:', e);
+                    return [];
+                }
+            }
+
+            saveDataTransaksi(){
+                try {
+                    localStorage.setItem(this.storageKey, JSON.stringify(this.pelanggan.map(p => p.catatTransaksi())));
+                } catch (e) {
+                    console.error('Gagal Menyimpan data:', e);
+                }
+            }
+
+            tambahPelanggan(pelanggan) {
+                if (this.pelanggan.some(p => p.nomorTelepon === pelanggan.nomorTelepon)){
+                    throw new Error('Nomor Telepon Tersebut sudah sedang Menyewa.');
+                }
+                this.pelanggan.push(pelanggan);
+                this.saveDataTransaksi();
+            }
+
+            hapusPelangganByPhone(nomorTelepon) {
+                const idx = this.pelanggan.findIndex(p => p.nomorTelepon === nomorTelepon);
+                if (idx === -1) return false;
+                this.pelanggan.splice(idx, 1);
+                this.saveDataTransaksi();
+                return true;
+            }
+
+            getDaftarPelanggan(){
+                return [...this.pelanggan];
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>\"']/g, s => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+            })[s]);
+        }
+        
+        const system = new RentalSystem();
+        const form = document.getElementById('rental-form');
+        const listE1 = document.getElementById('rental-list');
+        const emptyMsg = document.getElementById('empty-msg');
+
+        function renderList() {
+            const data = system.getDaftarPelanggan();
+            listE1.innerHTML = '';
+            emptyMsg.style.display = data.length ? 'none' : '';
+
+            if (data.length === 0) return;
+
+            data.forEach(p => {
+                const li = document.createElement('li');
+
+                const left = document.createElement('div');
+                left.innerHTML = `<strong>${escapeHtml(p.nama)}<strong><br> <span class=\"meta\">${escapeHtml(p.nomorTelepon)} - ${escapeHtml(p.kendaraanDisewa)} | ${new Date(p.waktuSewa).toLocaleString()}</span>`;
+                
+                const controls = document.createElement('div');
+                controls.className = 'controls';
+
+                const btnReturn = document.createElement('button');
+                btnReturn.type = 'button';
+                btnReturn.textContent = 'Kembalikan';
+                btnReturn.addEventListener('click', () => {
+                    if (confirm(`Kembalikan kendaraan milik ${p.nama}?`)) {
+                        system.hapusPelangganByPhone(p.nomorTelepon);
+                        renderList();
+                    }
+                });
+
+                controls.appendChild(btnReturn);
+                li.appendChild(left);
+                li.appendChild(controls);
+                listE1.appendChild(li);
+            });
+        }
+
+        form.addEventListener('submit', (ev) => {
+            ev.preventDefault();
+            const nama = document.getElementById('nama').value.trim();
+            const tel = document.getElementById('tel').value.trim();
+            const kendaraan = document.getElementById('kendaraan').value.trim();
+
+            if (!nama || !tel || !kendaraan){
+                alert('Mohon isi semua Field.');
+                return;
+            }
+
+            try {
+                const p = new Pelanggan(nama, tel, kendaraan);
+                system.tambahPelanggan(p);
+                form.reset();
+                renderList();
+            } catch (e) {
+                alert (e.message);
+            }
+        });
+
+        renderList();
+    </script>
+
+
+</body>
+</html>
